@@ -74,26 +74,29 @@ def validate(s):
 # until a ROM is full. Assume ADPCM A and B share the same ROM
 def allocate_samples(smp, vrom_size, out_vrom_pattern):
     dbg("Allocating samples into VROMs")
-    adpcm_pos = vrom_size
+    vrom_pos = vrom_size
+    absolute_pos = 0
     vrom = 0
     f = None
     for s in smp:
-        if adpcm_pos+len(s.data) > vrom_size:
+        if vrom_pos+len(s.data) > vrom_size:
             if f:
                 f.close()
-            adpcm_pos = 0
+            vrom_pos = 0
+            absolute_pos = vrom * vrom_size
             vrom += 1
             out = out_vrom_pattern.replace("X", str(vrom))
             dbg("  New VROM '%s'" % out)
         s.out = out
-        s.start = adpcm_pos
+        s.vrom_start = vrom_pos
+        s.start = absolute_pos + vrom_pos
         s.length = len(s.data)
         s.start_lsb = (s.start >> 8) & 0xff
         s.start_msb = (s.start >> 16) & 0xff
-        s.stop_lsb = ((s.start+s.length-1) >> 8) & 0xff
-        s.stop_msb = ((s.start+s.length-1) >> 16) & 0xff
+        s.stop_lsb = ((s.start + s.length-1) >> 8) & 0xff
+        s.stop_msb = ((s.start + s.length-1) >> 16) & 0xff
         dbg("    [%06x..%06x / %06x] %s" % (s.start, s.start+s.length, vrom_size, s.name))
-        adpcm_pos += s.length
+        vrom_pos += s.length
 
 
 # Save samples to VROMs on disk
@@ -103,10 +106,10 @@ def generate_vroms(smp, vrom_size, out_vrom_pattern, nb_vroms):
         out = out_vrom_pattern.replace("X", str(vrom))
         with open(out, "wb") as f:
             dbg("  %s" % out)
-            romsmp = filter(lambda r: r.out == out, smp)
-            for r in romsmp:
-                f.seek(r.start)
-                f.write(r.data)
+            vrom_smp = filter(lambda r: r.out == out, smp)
+            for s in vrom_smp:
+                f.seek(s.vrom_start)
+                f.write(s.data)
             f.truncate(vrom_size)
 
 
