@@ -1,6 +1,6 @@
 /*
  * Bank switching macros
- * Copyright (c) 2022 Damien Ciabrini
+ * Copyright (c) 2022-2026 Damien Ciabrini
  * This file is part of ngdevkit
  *
  * ngdevkit is free software: you can redistribute it and/or modify
@@ -25,11 +25,11 @@
  */
 
 /** On hardware, bank switching is managed by the cartridge itself
- * by writing a byte into the P-ROM2 memory address space
- * 0x200000..0x2fffff. This macro arbitrarily uses 0x2ffff0 to work
- * on both MAME and GnGeo.
+ * by writing a byte into an odd address from the P-ROM2 memory range
+ * 0x200000..0x2fffff. This macro arbitrarily uses 0x2ffff1 to work
+ * on most common emulators and cartridge linkers.
  */
-#define __BANK_SELECT_ADDRESS ((volatile u8*)0x2ffff0)
+#define __BANK_SELECT_ADDRESS ((volatile u8*)0x2ffff1)
 
 /** For cartridges with two P-ROMs, select the n-th bank
  * (chunk of 1MB) from the second P-ROM to map into the P-ROM2
